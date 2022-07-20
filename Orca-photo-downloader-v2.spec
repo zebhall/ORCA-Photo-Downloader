@@ -4,7 +4,7 @@
 block_cipher = None
 
 
-a = Analysis(['Orca-photo-downloader-v2.py'],
+a = Analysis(['ORCA-Photo-Downloader-v2.py'],
              pathex=[],
              binaries=[],
              datas=[],
@@ -26,15 +26,15 @@ exe = EXE(pyz,
           a.zipfiles,
           a.datas,  
           [],
-          name='Orca-photo-downloader-v2',
+          name='ORCA-Photo-Downloader-v2',
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,
           upx=True,
           upx_exclude=[],
           runtime_tmpdir=None,
-          console=True,
+          console=False,
           disable_windowed_traceback=False,
           target_arch=None,
           codesign_identity=None,
-          entitlements_file=None )
+          entitlements_file=None , icon='pss.ico')

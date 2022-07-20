@@ -157,7 +157,7 @@ def helpMe():
 # UI START
 gui = Tk()
 gui.title("ORCA Photo Downloader")
-
+gui.wm_attributes('-toolwindow', 'True')
 
 #Frames
 
@@ -165,16 +165,16 @@ inputFrame = LabelFrame(gui, width = 200, height = 50, pady = 5, padx = 5, fg = 
 inputFrame.grid(row=1, column=1, columnspan=2, pady = 5, padx = 5, sticky= EW)
 
 selection1Frame = LabelFrame(gui, width = 20, height = 50, pady = 5, padx = 5, fg = "#545454", text = "Image Filename Column")
-selection1Frame.grid(row=2, column=1, columnspan=1, pady = 5, padx = 5, sticky= EW)
+selection1Frame.grid(row=2, column=1, columnspan=1, pady = 0, padx = 5, sticky= EW)
 
 selection2Frame = LabelFrame(gui, width = 20, height = 50, pady = 5, padx = 5, fg = "#545454", text = "Image URL Column")
-selection2Frame.grid(row=2, column=2, columnspan=1, pady = 5, padx = 5, sticky= EW)
+selection2Frame.grid(row=2, column=2, columnspan=1, pady = 0, padx = 5, sticky= EW)
 
 outputFrame = LabelFrame(gui, width = 200, height = 50, pady = 5, padx = 5, fg = "#545454", text = "Output Folder")
 outputFrame.grid(row=3, column=1, columnspan=2, pady = 5, padx = 5, sticky= EW)
 
 statusFrame = LabelFrame(gui, width = 200, height = 50, pady = 5, padx = 5, fg = "#545454", text = "Status")
-statusFrame.grid(row=4, column=1, columnspan=2, pady = 5, padx = 5, sticky= EW)
+statusFrame.grid(row=4, column=1, columnspan=2, pady = 0, padx = 5, sticky= EW)
 
 ctrlFrame = Frame(gui, width = 200, height = 50, pady = 5, padx = 5)
 ctrlFrame.grid(row=5, column=1, columnspan=2, pady = 5, padx = 5, sticky= EW)
@@ -230,7 +230,13 @@ currentProgressDisplay.grid(column = 2, row = 2, padx=5, pady=5, sticky = E)
 
 # ctrlFrame Widgets
 startDownload = Button(ctrlFrame, width = 11, text = "Start Download", fg = "green", command=getPhotos)
-startDownload.grid(column = 1, row = 1, padx=5, pady=0, ipadx=15, ipady= 2, sticky = E)
+startDownload.grid(column = 1, row = 1, padx=5, pady=5, ipadx=15, ipady= 2, sticky = NW)
+
+copyrightNotice = Label(ctrlFrame, text = "Created by ZH for Portable Spectral Services - June 2022", anchor = W, fg = "#b5b5b5")
+copyrightNotice.grid(column = 1, row = 2, padx=5, pady=0, sticky = SW)
+
+iuoNotice = Label(ctrlFrame, text = "FOR INTERNAL USE ONLY", anchor = W, fg = "#b5b5b5")
+iuoNotice.grid(column = 1, row = 3, padx=5, pady=0, sticky = SW)
 
 #helpButton = Button(ctrlFrame, width = 1, text = " ? ", command=helpMe)
 #helpButton.grid(column = 2, row = 1, padx=5, pady=0, ipadx=1, ipady= 1, sticky = W)
