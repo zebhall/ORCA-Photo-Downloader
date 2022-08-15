@@ -2,7 +2,7 @@
 
 global versionNum
 global versionDate
-versionNum = 'v2.0.3'
+versionNum = 'v2.0.4'
 versionDate = '2022/08/15'
 
 from fileinput import filename
@@ -12,6 +12,7 @@ import requests
 import csv
 import os
 import time
+import sys
 import threading
 from tkinter import *
 from tkinter import messagebox
@@ -176,10 +177,18 @@ def greyAll():
 def helpMe():
     messagebox.showinfo("ORCA Photo Downloader - Help", "Help Text goes here")
 
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+    return os.path.join(base_path, relative_path)
+
 # UI START
 gui = Tk()
 gui.title("ORCA Photo Downloader")
-gui.wm_attributes('-toolwindow', 'True')
+#gui.wm_attributes('-toolwindow', 'True')
+iconpath = resource_path("pss.ico")
+gui.iconbitmap(iconpath)
 
 #Frames
 

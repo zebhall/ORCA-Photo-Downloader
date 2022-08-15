@@ -1,13 +1,17 @@
 # -*- mode: python ; coding: utf-8 -*-
 
 
+addedfiles = [
+    ("pss.ico",".")
+]
+
 block_cipher = None
 
 
 a = Analysis(['ORCA-Photo-Downloader-v2.py'],
              pathex=[],
              binaries=[],
-             datas=[],
+             datas=addedfiles,
              hiddenimports=[],
              hookspath=[],
              hooksconfig={},

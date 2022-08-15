@@ -1,1 +1,3 @@
 pyinstaller --onefile --windowed --clean --icon=pss.ico 'ORCA-Photo-Downloader-v2.py'
+
+pyinstaller --onefile --windowed --clean --icon=pss.ico ORCA-Photo-Downloader-v2.spec
