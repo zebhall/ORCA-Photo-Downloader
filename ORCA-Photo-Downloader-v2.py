@@ -1,5 +1,9 @@
 # Orca Photo Downloader by ZH 2022/06/08
 
+global versionNum
+global versionDate
+versionNum = 'v2.0.3'
+versionDate = '2022/08/15'
 
 from fileinput import filename
 from tkinter.ttk import Progressbar
@@ -8,6 +12,7 @@ import requests
 import csv
 import os
 import time
+import threading
 from tkinter import *
 from tkinter import messagebox
 from tkinter import filedialog
@@ -79,6 +84,23 @@ def getDateTime():          #called by getPhotos
     return datetimeString
 
 
+def start_submit_thread(event):
+    global submit_thread
+    submit_thread = threading.Thread(target=getPhotos)
+    submit_thread.daemon = True
+    #progressbar.start()
+    submit_thread.start()
+    gui.after(20, check_submit_thread)
+
+
+def check_submit_thread():
+    if submit_thread.is_alive():
+        gui.after(20, check_submit_thread)
+    else:
+        progressb.stop()
+        currentStatus.set("Completed.")
+
+
 def readyCheck():
     global URLIndex
     global nameIndex
@@ -129,7 +151,7 @@ def getPhotos():
                 file.write(photo.content)
                 file.close()
 
-                currentStatus.set(title + " - Saved to " + outputDIR)
+                currentStatus.set(title + " - Saved.")
                 print(title + " saved.")
                 updateProgress()
         
@@ -224,19 +246,22 @@ currentStatusDisplay.grid(column = 1, row = 2, padx=5, pady=5, sticky = W)
 
 currentProgress = StringVar()
 currentProgress.set("0 / 0")
-currentProgressDisplay = Label(statusFrame, textvariable = currentProgress, anchor = E, fg = "#545454")
-currentProgressDisplay.grid(column = 2, row = 2, padx=5, pady=5, sticky = E)
+currentProgressDisplay = Label(statusFrame, textvariable = currentProgress, anchor = W, fg = "#545454")
+currentProgressDisplay.grid(column = 1, row = 3, padx=5, pady=5, sticky = W)
 
 
 # ctrlFrame Widgets
-startDownload = Button(ctrlFrame, width = 11, text = "Start Download", fg = "green", command=getPhotos)
+startDownload = Button(ctrlFrame, width = 11, text = "Start Download", fg = "green", command=lambda:start_submit_thread(None))
 startDownload.grid(column = 1, row = 1, padx=5, pady=5, ipadx=15, ipady= 2, sticky = NW)
 
-copyrightNotice = Label(ctrlFrame, text = "Created by ZH for Portable Spectral Services - June 2022", anchor = W, fg = "#b5b5b5")
+copyrightNotice = Label(ctrlFrame, text = "Created by ZH for Portable Spectral Services", anchor = W, fg = "#b5b5b5")
 copyrightNotice.grid(column = 1, row = 2, padx=5, pady=0, sticky = SW)
 
+versionNotice = Label(ctrlFrame, text = (versionNum + " - " + versionDate), anchor = W, fg = "#b5b5b5")
+versionNotice.grid(column = 1, row = 3, padx=5, pady=0, sticky = SW)
+
 iuoNotice = Label(ctrlFrame, text = "FOR INTERNAL USE ONLY", anchor = W, fg = "#b5b5b5")
-iuoNotice.grid(column = 1, row = 3, padx=5, pady=0, sticky = SW)
+iuoNotice.grid(column = 1, row = 4, padx=5, pady=0, sticky = SW)
 
 #helpButton = Button(ctrlFrame, width = 1, text = " ? ", command=helpMe)
 #helpButton.grid(column = 2, row = 1, padx=5, pady=0, ipadx=1, ipady= 1, sticky = W)
