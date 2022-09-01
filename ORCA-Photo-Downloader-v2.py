@@ -2,8 +2,8 @@
 
 global versionNum
 global versionDate
-versionNum = 'v2.0.4'
-versionDate = '2022/08/15'
+versionNum = 'v2.0.5'
+versionDate = '2022/09/01'
 
 from fileinput import filename
 from tkinter.ttk import Progressbar
@@ -38,31 +38,34 @@ def clickBrowseOutput():
 
 def clickReadCSVData():
 
-    motherCSV = open(motherCSVPath.get())
-    motherCSVreader = csv.reader(motherCSV)
+    with open(motherCSVPath.get(), encoding='utf-8') as motherCSV:
+        motherCSVreader = csv.reader(motherCSV)
+        global header
+        header = []
+        header = next(motherCSVreader)
+        headerVar.set(header)
 
-    global header
-    header = []
-    header = next(motherCSVreader)
-    headerVar.set(header)
 
-    global rows
-    rows = []
+def readRelevantColumns():
+    with open(motherCSVPath.get(), encoding='utf-8') as motherCSV:
+        motherCSVreader = csv.reader(motherCSV)
+        next(motherCSVreader)
+        global rows
+        rows = []
 
-    global rowCount
-    rowCount=0
+        global rowCount
+        rowCount=0
 
-    for row in motherCSVreader:
-        rows.append(row)
-        rowCount+=1
-
-    motherCSV.close()
+        for row in motherCSVreader:
+            newRow = [row[nameIndex], row[URLIndex]]
+            rows.append(newRow)
+            rowCount+=1
 
 
 def getPhotoRowCount():
     photoRowCount = 0
     for row in rows:
-        if row[URLIndex] != '':
+        if row[1] != '':
             photoRowCount+=1
     return photoRowCount
 
@@ -116,6 +119,8 @@ def readyCheck():
         URLIndex = int(URLCurSel[0])
         nameIndex = int(nameCurSel[0])
 
+        readRelevantColumns()
+
         global completedCount
         completedCount = 0
         global totalCount
@@ -137,13 +142,14 @@ def getPhotos():
     if ready:
         greyAll()
         outputDIR = outputDirectory.get()
+        
         for row in rows:
-            if row[URLIndex] != '':
-                title = (str(row[nameIndex]) + ".jpg")
+            if row[1] != '':
+                title = (str(row[0]) + ".jpg")
                 fileName = outputDIR + '/' + title
 
                 currentStatus.set(title + " - Accessing Image URL...")
-                photo = requests.get(row[URLIndex])
+                photo = requests.get(row[1])
 
                 currentStatus.set(title + " - Creating file...")
                 file = open(fileName, "wb")
@@ -155,8 +161,10 @@ def getPhotos():
                 currentStatus.set(title + " - Saved.")
                 print(title + " saved.")
                 updateProgress()
+            else:
+                print(row[0]+" - URL Invalid or Missing.")
         
-        currentStatus.set("All Files saved successfully.")
+        currentStatus.set("Files saved successfully.")
     
 def greyAll():
     for child in inputFrame.winfo_children():
