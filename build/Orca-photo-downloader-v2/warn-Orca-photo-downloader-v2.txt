@@ -70,7 +70,7 @@ missing module named brotlicffi - imported by urllib3.util.request (optional), u
 missing module named Queue - imported by urllib3.util.queue (conditional)
 missing module named "'urllib3.packages.six.moves.urllib'.parse" - imported by urllib3.request (top-level), urllib3.poolmanager (top-level)
 runtime module named urllib3.packages.six.moves - imported by http.client (top-level), urllib3.util.response (top-level), urllib3.connectionpool (top-level), 'urllib3.packages.six.moves.urllib' (top-level), urllib3.util.queue (top-level)
-missing module named socks - imported by urllib3.contrib.socks (optional)
+missing module named win_inet_pton - imported by socks (conditional, optional)
 missing module named dummy_threading - imported by requests.cookies (optional)
 missing module named 'typing.io' - imported by importlib.resources (top-level)
 missing module named cryptography - imported by urllib3.contrib.pyopenssl (top-level), requests (conditional, optional)

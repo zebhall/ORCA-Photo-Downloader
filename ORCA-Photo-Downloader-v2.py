@@ -2,8 +2,8 @@
 
 global versionNum
 global versionDate
-versionNum = 'v2.1.0'
-versionDate = '2022/09/01'
+versionNum = 'v2.2.0'
+versionDate = '2022/09/12'
 
 from fileinput import filename
 from tkinter.ttk import Progressbar
@@ -118,16 +118,26 @@ async def downloadImage(row, session):
         async with session.get(url) as response:
             async with aiofiles.open(fileName, "wb") as f:
                 await f.write(await response.read())
+                #print(response.headers.get('Last-Modified'))
+                timestamps.append([row[0],url,(response.headers.get('Last-Modified'))])
     updateProgress()
 
 
 
 async def downloadAll():
+    global timestamps
+    timestamps = [['File Name', 'URL', 'Image Uploaded']]
     async with aiohttp.ClientSession() as session:
         await asyncio.gather(
             *[downloadImage(row, session) for row in rows]
         )
 
+    #print(timestamps)
+    if (wantsTimestamps.get() == 1):
+        with open((outputDIR+'/Timestamps.csv'), 'w', newline='') as f:
+            writer = csv.writer(f)
+            for row in timestamps:
+                writer.writerow(row)
 
 
 def readyCheck():
@@ -208,6 +218,9 @@ def greyAll():
     for child in outputFrame.winfo_children():
         child.configure(state='disable')
 
+    for child in optionsFrame.winfo_children():
+        child.configure(state='disable')
+
     for child in ctrlFrame.winfo_children():
         child.configure(state='disable')   
 
@@ -253,11 +266,14 @@ selection2Frame.grid(row=2, column=2, columnspan=1, pady = 0, padx = 5, sticky= 
 outputFrame = LabelFrame(gui, width = 200, height = 50, pady = 5, padx = 5, font = consolas10, fg = "#545454", text = "Output Folder")
 outputFrame.grid(row=3, column=1, columnspan=2, pady = 5, padx = 5, sticky= EW)
 
+optionsFrame = LabelFrame(gui, width = 200, height = 50, pady = 5, padx = 5, font = consolas10, fg = "#545454", text = "Options")
+optionsFrame.grid(row=4, column=1, columnspan=2, pady = 0, padx = 5, sticky= EW)
+
 statusFrame = LabelFrame(gui, width = 200, height = 50, pady = 5, padx = 5, font = consolas10, fg = "#545454", text = "Status")
-statusFrame.grid(row=4, column=1, columnspan=2, pady = 0, padx = 5, sticky= EW)
+statusFrame.grid(row=5, column=1, columnspan=2, pady = 5, padx = 5, sticky= EW)
 
 ctrlFrame = Frame(gui, width = 200, height = 50, pady = 5, padx = 5)
-ctrlFrame.grid(row=5, column=1, columnspan=2, pady = 5, padx = 5, sticky= EW)
+ctrlFrame.grid(row=6, column=1, columnspan=2, pady = 5, padx = 5, sticky= EW)
 
 
 # InputFrame Widgets
@@ -292,6 +308,11 @@ outputEntry.grid(column=1, row=1, padx=5, pady=5, ipadx=20, ipady=1, sticky = EW
 outputBrowse = Button(outputFrame, width = 5, text = "Browse", font = consolas10, fg = "#FDFEFE", bg = "#566573", command=clickBrowseOutput)
 outputBrowse.grid(column=4, row=1, padx=5, pady=5, ipadx=5, ipady=0)
 
+
+# OptionsFrame Widgets
+wantsTimestamps = IntVar()
+timestampCheckBox = Checkbutton(optionsFrame, text = 'Generate Image Timestamps CSV', variable = wantsTimestamps, onvalue = 1, offvalue = 0, command = print(wantsTimestamps), font = consolas10, fg = "#566573")
+timestampCheckBox.grid(column=1, row=1, padx=0, pady=0, ipadx=5, ipady=1, sticky = EW, columnspan= 2)
 
 # StatusFrame Widgets
 progressb = Progressbar(statusFrame, orient = HORIZONTAL, length = 400, mode = "determinate")
