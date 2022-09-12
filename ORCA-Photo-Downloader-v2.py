@@ -2,7 +2,7 @@
 
 global versionNum
 global versionDate
-versionNum = 'v2.0.5'
+versionNum = 'v2.1.0'
 versionDate = '2022/09/01'
 
 from fileinput import filename
@@ -17,6 +17,10 @@ import threading
 from tkinter import *
 from tkinter import messagebox
 from tkinter import filedialog
+from tkinter import font as tkFont
+import asyncio
+import aiohttp
+import aiofiles
 
 
 # Preamble
@@ -52,7 +56,6 @@ def readRelevantColumns():
         next(motherCSVreader)
         global rows
         rows = []
-
         global rowCount
         rowCount=0
 
@@ -99,10 +102,32 @@ def start_submit_thread(event):
 
 def check_submit_thread():
     if submit_thread.is_alive():
+        currentProgress.set(str(completedCount) + "/" + str(totalCount))
+        progressb["value"] = completedCount
         gui.after(20, check_submit_thread)
     else:
         progressb.stop()
         currentStatus.set("Completed.")
+
+
+async def downloadImage(row, session):
+    url = row[1]
+    title = (str(row[0]) + ".jpg")
+    fileName = outputDIR + '/' + title
+    if row[1] != '':
+        async with session.get(url) as response:
+            async with aiofiles.open(fileName, "wb") as f:
+                await f.write(await response.read())
+    updateProgress()
+
+
+
+async def downloadAll():
+    async with aiohttp.ClientSession() as session:
+        await asyncio.gather(
+            *[downloadImage(row, session) for row in rows]
+        )
+
 
 
 def readyCheck():
@@ -132,38 +157,42 @@ def readyCheck():
 
 def updateProgress():
     global completedCount
-    completedCount += 1
-    currentProgress.set(str(completedCount) + "/" + str(totalCount))
-    progressb["value"] = completedCount
+    if completedCount < totalCount:
+        completedCount += 1
+        currentProgress.set(str(completedCount) + "/" + str(totalCount))
+        progressb["value"] = completedCount
     gui.update_idletasks()
 
 def getPhotos():   
     ready = readyCheck()
     if ready:
         greyAll()
+        global outputDIR
         outputDIR = outputDirectory.get()
-        
-        for row in rows:
-            if row[1] != '':
-                title = (str(row[0]) + ".jpg")
-                fileName = outputDIR + '/' + title
+        currentStatus.set("Downloading and Saving...")
+        asyncio.run(downloadAll())
 
-                currentStatus.set(title + " - Accessing Image URL...")
-                photo = requests.get(row[1])
+        # for row in rows:
+        #     if row[1] != '':
+        #         title = (str(row[0]) + ".jpg")
+        #         fileName = outputDIR + '/' + title
 
-                currentStatus.set(title + " - Creating file...")
-                file = open(fileName, "wb")
+        #         currentStatus.set(title + " - Accessing Image URL...")
+        #         photo = requests.get(row[1])
 
-                currentStatus.set(title + " - Writing file...")
-                file.write(photo.content)
-                file.close()
+        #         currentStatus.set(title + " - Creating file...")
+        #         file = open(fileName, "wb")
 
-                currentStatus.set(title + " - Saved.")
-                print(title + " saved.")
-                updateProgress()
-            else:
-                print(row[0]+" - URL Invalid or Missing.")
-        
+        #         currentStatus.set(title + " - Writing file...")
+        #         file.write(photo.content)
+        #         file.close()
+
+        #         currentStatus.set(title + " - Saved.")
+        #         print(title + " saved.")
+        #         updateProgress()
+        #     else:
+        #         print(row[0]+" - URL Invalid or Missing.") 
+
         currentStatus.set("Files saved successfully.")
     
 def greyAll():
@@ -198,21 +227,33 @@ gui.title("ORCA Photo Downloader")
 iconpath = resource_path("pss.ico")
 gui.iconbitmap(iconpath)
 
+# Fonts
+consolas24 = tkFont.Font(family='Consolas', size=24)
+consolas20 = tkFont.Font(family='Consolas', size=20)
+consolas18 = tkFont.Font(family='Consolas', size=18)
+consolas18B = tkFont.Font(family='Consolas', size=18, weight = 'bold')
+consolas16 = tkFont.Font(family='Consolas', size=16)
+consolas12 = tkFont.Font(family='Consolas', size=12)
+consolas10 = tkFont.Font(family='Consolas', size=10)
+consolas10B = tkFont.Font(family='Consolas', size=10, weight = 'bold')
+consolas09 = tkFont.Font(family='Consolas', size=9)
+consolas08 = tkFont.Font(family='Consolas', size=8)
+
 #Frames
 
-inputFrame = LabelFrame(gui, width = 200, height = 50, pady = 5, padx = 5, fg = "#545454", text = "Input CSV File")
+inputFrame = LabelFrame(gui, width = 200, height = 50, pady = 5, padx = 5, font = consolas10, fg = "#545454", text = "Input CSV File")
 inputFrame.grid(row=1, column=1, columnspan=2, pady = 5, padx = 5, sticky= EW)
 
-selection1Frame = LabelFrame(gui, width = 20, height = 50, pady = 5, padx = 5, fg = "#545454", text = "Image Filename Column")
+selection1Frame = LabelFrame(gui, width = 20, height = 50, pady = 5, padx = 5, font = consolas10, fg = "#545454", text = "Image Filename Column")
 selection1Frame.grid(row=2, column=1, columnspan=1, pady = 0, padx = 5, sticky= EW)
 
-selection2Frame = LabelFrame(gui, width = 20, height = 50, pady = 5, padx = 5, fg = "#545454", text = "Image URL Column")
+selection2Frame = LabelFrame(gui, width = 20, height = 50, pady = 5, padx = 5, font = consolas10, fg = "#545454", text = "Image URL Column")
 selection2Frame.grid(row=2, column=2, columnspan=1, pady = 0, padx = 5, sticky= EW)
 
-outputFrame = LabelFrame(gui, width = 200, height = 50, pady = 5, padx = 5, fg = "#545454", text = "Output Folder")
+outputFrame = LabelFrame(gui, width = 200, height = 50, pady = 5, padx = 5, font = consolas10, fg = "#545454", text = "Output Folder")
 outputFrame.grid(row=3, column=1, columnspan=2, pady = 5, padx = 5, sticky= EW)
 
-statusFrame = LabelFrame(gui, width = 200, height = 50, pady = 5, padx = 5, fg = "#545454", text = "Status")
+statusFrame = LabelFrame(gui, width = 200, height = 50, pady = 5, padx = 5, font = consolas10, fg = "#545454", text = "Status")
 statusFrame.grid(row=4, column=1, columnspan=2, pady = 0, padx = 5, sticky= EW)
 
 ctrlFrame = Frame(gui, width = 200, height = 50, pady = 5, padx = 5)
@@ -222,33 +263,33 @@ ctrlFrame.grid(row=5, column=1, columnspan=2, pady = 5, padx = 5, sticky= EW)
 # InputFrame Widgets
 
 motherCSVPath = StringVar()
-inputEntry = Entry(inputFrame, width = 31, textvariable = motherCSVPath)
+inputEntry = Entry(inputFrame, width = 31, font = consolas10, textvariable = motherCSVPath)
 inputEntry.grid(column=1, row=1, padx=5, pady=5, ipadx=20, ipady=1, sticky = EW, columnspan= 3)
 
-inputBrowse = Button(inputFrame, width = 5, text = "Browse", command=clickBrowseInput)
+inputBrowse = Button(inputFrame, width = 5, text = "Browse", font = consolas10, fg = "#FDFEFE", bg = "#566573", command=clickBrowseInput)
 inputBrowse.grid(column=4, row=1, padx=5, pady=5, ipadx=5, ipady=0)
 
-inputGo = Button(inputFrame, width = 11, text = "Read CSV Data", fg = "green", command=clickReadCSVData)
+inputGo = Button(inputFrame, width = 8, text = "Read Data", font = consolas10, fg = "#FDFEFE", bg = "#2E86C1",  command=clickReadCSVData)
 inputGo.grid(column=5, row=1, padx=5, pady=5, ipadx=5, ipady=0)
 
 
 # Selection1Frame Widgets
 headerVar = StringVar()
-nameListbox = Listbox(selection1Frame, width = 30, listvariable = headerVar, exportselection=0)
+nameListbox = Listbox(selection1Frame, width = 26, listvariable = headerVar, exportselection=0, font = consolas10)
 nameListbox.grid(column=1, row=1, padx=5, pady=5, sticky = NSEW)
 
 
 # Selection2Frame Widgets
-urlListbox = Listbox(selection2Frame, width = 30, listvariable = headerVar,exportselection=0)
+urlListbox = Listbox(selection2Frame, width = 26, listvariable = headerVar,exportselection=0,  font = consolas10)
 urlListbox.grid(column=1, row=1, padx=5, pady=5, sticky = NSEW)
 
 
 # OutputFrame Widgets
 outputDirectory = StringVar()
-outputEntry = Entry(outputFrame, width = 48, textvariable = outputDirectory)
+outputEntry = Entry(outputFrame, width = 43, font = consolas10, textvariable = outputDirectory)
 outputEntry.grid(column=1, row=1, padx=5, pady=5, ipadx=20, ipady=1, sticky = EW, columnspan= 3)
 
-outputBrowse = Button(outputFrame, width = 5, text = "Browse", command=clickBrowseOutput)
+outputBrowse = Button(outputFrame, width = 5, text = "Browse", font = consolas10, fg = "#FDFEFE", bg = "#566573", command=clickBrowseOutput)
 outputBrowse.grid(column=4, row=1, padx=5, pady=5, ipadx=5, ipady=0)
 
 
@@ -258,26 +299,26 @@ progressb.grid(column = 1, columnspan= 2, row = 1, padx=5, pady=5, sticky = EW)
 
 currentStatus = StringVar()
 currentStatus.set("...")
-currentStatusDisplay = Label(statusFrame, textvariable = currentStatus, anchor = W, fg = "#545454")
+currentStatusDisplay = Label(statusFrame, textvariable = currentStatus, anchor = W, font = consolas08, fg = "#545454")
 currentStatusDisplay.grid(column = 1, row = 2, padx=5, pady=5, sticky = W)
 
 currentProgress = StringVar()
 currentProgress.set("0 / 0")
-currentProgressDisplay = Label(statusFrame, textvariable = currentProgress, anchor = W, fg = "#545454")
+currentProgressDisplay = Label(statusFrame, textvariable = currentProgress, anchor = W, font = consolas08, fg = "#545454")
 currentProgressDisplay.grid(column = 1, row = 3, padx=5, pady=5, sticky = W)
 
 
 # ctrlFrame Widgets
-startDownload = Button(ctrlFrame, width = 11, text = "Start Download", fg = "green", command=lambda:start_submit_thread(None))
+startDownload = Button(ctrlFrame, width = 13, text = "Start Download", font = consolas12, fg = "#FDFEFE", bg = "#27AE60", command=lambda:start_submit_thread(None))
 startDownload.grid(column = 1, row = 1, padx=5, pady=5, ipadx=15, ipady= 2, sticky = NW)
 
-copyrightNotice = Label(ctrlFrame, text = "Created by ZH for Portable Spectral Services", anchor = W, fg = "#b5b5b5")
+copyrightNotice = Label(ctrlFrame, text = "Created by ZH for Portable Spectral Services", anchor = W, font = consolas08, fg = "#b5b5b5")
 copyrightNotice.grid(column = 1, row = 2, padx=5, pady=0, sticky = SW)
 
-versionNotice = Label(ctrlFrame, text = (versionNum + " - " + versionDate), anchor = W, fg = "#b5b5b5")
+versionNotice = Label(ctrlFrame, text = (versionNum + " - " + versionDate), anchor = W, font = consolas08, fg = "#b5b5b5")
 versionNotice.grid(column = 1, row = 3, padx=5, pady=0, sticky = SW)
 
-iuoNotice = Label(ctrlFrame, text = "FOR INTERNAL USE ONLY", anchor = W, fg = "#b5b5b5")
+iuoNotice = Label(ctrlFrame, text = "FOR INTERNAL USE ONLY", anchor = W, font = consolas08, fg = "#b5b5b5")
 iuoNotice.grid(column = 1, row = 4, padx=5, pady=0, sticky = SW)
 
 #helpButton = Button(ctrlFrame, width = 1, text = " ? ", command=helpMe)
