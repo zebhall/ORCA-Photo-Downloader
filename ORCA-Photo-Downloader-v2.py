@@ -2,10 +2,11 @@
 
 global versionNum
 global versionDate
-versionNum = 'v2.2.0'
-versionDate = '2022/09/12'
+versionNum = 'v2.2.1'
+versionDate = '2022/09/27'
 
 from fileinput import filename
+from multiprocessing.sharedctypes import Value
 from tkinter.ttk import Progressbar
 from unicodedata import name
 import requests
@@ -21,6 +22,7 @@ from tkinter import font as tkFont
 import asyncio
 import aiohttp
 import aiofiles
+import validators
 
 
 # Preamble
@@ -32,12 +34,12 @@ import aiofiles
 
 def clickBrowseInput():
     motherCSVPath.set(filedialog.askopenfilename(filetypes=[("CSV File", "*.csv")], initialdir = os.getcwd())) # and write into input path text box
-    print(motherCSVPath)
+    print(f'Input Path: {motherCSVPath.get()}')
     
 
 def clickBrowseOutput():
     outputDirectory.set(filedialog.askdirectory(initialdir = os.getcwd()))
-    print(outputDirectory)
+    print(f'Output Directory: {outputDirectory.get()}')
 
 
 def clickReadCSVData():
@@ -57,12 +59,39 @@ def readRelevantColumns():
         global rows
         rows = []
         global rowCount
-        rowCount=0
+        rowCount=1
+
+        invalidChars = ['<','>',':','"','/','\\','|','?','*']
+        invalidEndChars = ['.',' ']
+        
 
         for row in motherCSVreader:
+
+            rowCount+=1
+
+            if row[nameIndex] == '' or row[URLIndex] == '':
+                continue
+
+            if any(x in row[nameIndex] for x in invalidChars):
+                print(f'File name "{row[nameIndex]}" in row {rowCount} contains invalid characters. Program will skip this image.')
+                messagebox.showerror(title = 'File Name Error', message = (f'File name "{row[nameIndex]}" in row {rowCount} contains invalid characters. Program will skip this image.'))
+                continue
+
+            if any(x in row[nameIndex][-1] for x in invalidEndChars):
+                print(f'File name "{row[nameIndex]}" in row {rowCount} contains invalid characters. Filenames cannot end with a space or a period. Program will skip this image.')
+                messagebox.showerror(title = 'File Name Error', message = (f'File name "{row[nameIndex]}" in row {rowCount} contains invalid characters. Filenames cannot end with a space or a period. Program will skip this image.'))
+                continue
+            
+            if validators.url(row[URLIndex]) != TRUE:
+                print(f'URL in row {rowCount} is invalid. Program will skip this image.')
+                messagebox.showerror(title = 'URL Validity Error', message = (f'URL "{row[URLIndex]}" in row {rowCount} is invalid. Program will skip this image.'))
+                continue
+
             newRow = [row[nameIndex], row[URLIndex]]
             rows.append(newRow)
-            rowCount+=1
+        
+    print(f'{len(rows)} valid Name/URL pairs found.')
+            
 
 
 def getPhotoRowCount():
@@ -112,6 +141,7 @@ def check_submit_thread():
 
 async def downloadImage(row, session):
     url = row[1]
+    #print(url)
     title = (str(row[0]) + ".jpg")
     fileName = outputDIR + '/' + title
     if row[1] != '':
@@ -154,15 +184,18 @@ def readyCheck():
         URLIndex = int(URLCurSel[0])
         nameIndex = int(nameCurSel[0])
 
-        readRelevantColumns()
-
         global completedCount
         completedCount = 0
         global totalCount
+        totalCount = 0
+
+        readRelevantColumns()
+
         totalCount = getPhotoRowCount()
+
         progressb["maximum"] = totalCount
 
-        print("ready")      #placeholder before error handling
+        print("Ready to Download Files.")      #placeholder before error handling
         return 1        # return 1 if ready(no issues)
 
 def updateProgress():
@@ -311,7 +344,7 @@ outputBrowse.grid(column=4, row=1, padx=5, pady=5, ipadx=5, ipady=0)
 
 # OptionsFrame Widgets
 wantsTimestamps = IntVar()
-timestampCheckBox = Checkbutton(optionsFrame, text = 'Generate Image Timestamps CSV', variable = wantsTimestamps, onvalue = 1, offvalue = 0, command = print(wantsTimestamps), font = consolas10, fg = "#566573")
+timestampCheckBox = Checkbutton(optionsFrame, text = 'Generate Image Timestamps CSV', variable = wantsTimestamps, onvalue = 1, offvalue = 0, font = consolas10, fg = "#566573")
 timestampCheckBox.grid(column=1, row=1, padx=0, pady=0, ipadx=5, ipady=1, sticky = EW, columnspan= 2)
 
 # StatusFrame Widgets
