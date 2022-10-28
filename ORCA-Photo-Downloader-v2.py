@@ -2,8 +2,8 @@
 
 global versionNum
 global versionDate
-versionNum = 'v2.2.1'
-versionDate = '2022/09/27'
+versionNum = 'v2.2.2'
+versionDate = '2022/10/28'
 
 from fileinput import filename
 from multiprocessing.sharedctypes import Value
@@ -23,6 +23,8 @@ import asyncio
 import aiohttp
 import aiofiles
 import validators
+import xlrd
+
 
 
 # Preamble
@@ -119,6 +121,33 @@ def getDateTime():          #called by getPhotos
     datetimeString = time.strftime("%Y-%m-%d_%H%M%S", datetimeData)
     return datetimeString
 
+def monthN(month):
+    match month:
+        case 'Jan':
+            return 1
+        case 'Feb':
+            return 2
+        case 'Mar':
+            return 3
+        case 'Apr':
+            return 4
+        case 'May':
+            return 5
+        case 'Jun':
+            return 6
+        case 'Jul':
+            return 7
+        case 'Aug':
+            return 8
+        case 'Sep':
+            return 9
+        case 'Oct':
+            return 10
+        case 'Nov':
+            return 11
+        case 'Dec':
+            return 12
+
 
 def start_submit_thread(event):
     global submit_thread
@@ -149,14 +178,16 @@ async def downloadImage(row, session):
             async with aiofiles.open(fileName, "wb") as f:
                 await f.write(await response.read())
                 #print(response.headers.get('Last-Modified'))
-                timestamps.append([row[0],url,(response.headers.get('Last-Modified'))])
+                dt = response.headers.get('Last-Modified')
+                xldt = xlrd.xldate.xldate_from_datetime_tuple((int(dt[12:16]), monthN(dt[8:11]),int(dt[5:7]), int(dt[17:19]), int(dt[20:22]), int(dt[23:25])),0)
+                timestamps.append([row[0],url,xldt,dt])
     updateProgress()
 
 
 
 async def downloadAll():
     global timestamps
-    timestamps = [['File Name', 'URL', 'Image Uploaded']]
+    timestamps = [['File Name', 'URL', 'Image Uploaded (excel-format)', 'Image Uploaded (plaintext)']]
     async with aiohttp.ClientSession() as session:
         await asyncio.gather(
             *[downloadImage(row, session) for row in rows]
