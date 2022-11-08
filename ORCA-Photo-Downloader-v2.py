@@ -2,8 +2,8 @@
 
 global versionNum
 global versionDate
-versionNum = 'v2.2.2'
-versionDate = '2022/10/28'
+versionNum = 'v2.2.3'
+versionDate = '2022/11/08'
 
 from fileinput import filename
 from multiprocessing.sharedctypes import Value
@@ -168,19 +168,31 @@ def check_submit_thread():
         currentStatus.set("Completed.")
 
 
+
+timeout_seconds = 1000
+session_timeout =  aiohttp.ClientTimeout(total=None,sock_connect=timeout_seconds,sock_read=timeout_seconds)
+
 async def downloadImage(row, session):
     url = row[1]
     #print(url)
     title = (str(row[0]) + ".jpg")
     fileName = outputDIR + '/' + title
     if row[1] != '':
-        async with session.get(url) as response:
-            async with aiofiles.open(fileName, "wb") as f:
-                await f.write(await response.read())
-                #print(response.headers.get('Last-Modified'))
-                dt = response.headers.get('Last-Modified')
-                xldt = xlrd.xldate.xldate_from_datetime_tuple((int(dt[12:16]), monthN(dt[8:11]),int(dt[5:7]), int(dt[17:19]), int(dt[20:22]), int(dt[23:25])),0)
-                timestamps.append([row[0],url,xldt,dt])
+        try:
+            async with session.get(url) as response:
+                async with aiofiles.open(fileName, "wb") as f:
+                    await f.write(await response.read())
+                    #print(response.headers.get('Last-Modified'))
+                    dt = response.headers.get('Last-Modified')
+                    xldt = xlrd.xldate.xldate_from_datetime_tuple((int(dt[12:16]), monthN(dt[8:11]),int(dt[5:7]), int(dt[17:19]), int(dt[20:22]), int(dt[23:25])),0)
+                    timestamps.append([row[0],url,xldt,dt])
+        # except aiohttp.ClientConnectionError:
+        #     print(f'Client connection error. The connection to the ORCA server at {row[1]} was closed prematurely.')
+        #     timestamps.append([row[0],url,'UNKNOWN','Client connection error occurred. Image was not downloaded.'])
+        except:
+            print(f'Something else went wrong with the connection to {row[1]}.')
+            timestamps.append([row[0],url,'UNKNOWN','Other error occurred. Image was not downloaded.'])
+
     updateProgress()
 
 
@@ -188,7 +200,7 @@ async def downloadImage(row, session):
 async def downloadAll():
     global timestamps
     timestamps = [['File Name', 'URL', 'Image Uploaded (excel-format)', 'Image Uploaded (plaintext)']]
-    async with aiohttp.ClientSession() as session:
+    async with aiohttp.ClientSession(timeout=session_timeout) as session:
         await asyncio.gather(
             *[downloadImage(row, session) for row in rows]
         )
