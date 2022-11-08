@@ -2,7 +2,7 @@
 
 global versionNum
 global versionDate
-versionNum = 'v2.2.3'
+versionNum = 'v2.3.0'
 versionDate = '2022/11/08'
 
 from fileinput import filename
@@ -191,7 +191,7 @@ async def downloadImage(row, session):
         #     timestamps.append([row[0],url,'UNKNOWN','Client connection error occurred. Image was not downloaded.'])
         except:
             print(f'Something else went wrong with the connection to {row[1]}.')
-            timestamps.append([row[0],url,'UNKNOWN','Other error occurred. Image was not downloaded.'])
+            timestamps.append([row[0],url,'UNKNOWN','Error occurred. Image was not downloaded.'])
 
     updateProgress()
 
@@ -283,26 +283,30 @@ def getPhotos():
     
 def greyAll():
     for child in inputFrame.winfo_children():
-        child.configure(state='disable')
+        child.configure(state='disable', bg = '#E4E4E4')
 
     for child in selection1Frame.winfo_children():
-        child.configure(state='disable')
+        child.configure(state='disable', bg = '#E4E4E4')
 
     for child in selection2Frame.winfo_children():
-        child.configure(state='disable')
+        child.configure(state='disable', bg = '#E4E4E4')
 
     for child in outputFrame.winfo_children():
-        child.configure(state='disable')
+        child.configure(state='disable', bg = '#E4E4E4')
 
     for child in optionsFrame.winfo_children():
-        child.configure(state='disable')
+        child.configure(state='disable', bg = '#E4E4E4')
 
-    for child in ctrlFrame.winfo_children():
-        child.configure(state='disable')   
+    # for child in ctrlFrame.winfo_children():
+    #     child.configure(state='disable')   
+    startDownload.configure(state='disable', bg = '#E4E4E4')
 
 def helpMe():
     messagebox.showinfo("ORCA Photo Downloader - Help", "Help Text goes here")
 
+def clickReset():
+    #os.execl(sys.executable, sys.executable, *sys.argv)
+    os.execl(sys.executable, '"{}"'.format(sys.executable), *sys.argv)
 
 def resource_path(relative_path):
     """ Get absolute path to resource, works for dev and for PyInstaller """
@@ -323,6 +327,7 @@ consolas18 = tkFont.Font(family='Consolas', size=18)
 consolas18B = tkFont.Font(family='Consolas', size=18, weight = 'bold')
 consolas16 = tkFont.Font(family='Consolas', size=16)
 consolas12 = tkFont.Font(family='Consolas', size=12)
+consolas12B = tkFont.Font(family='Consolas', size=12, weight = 'bold')
 consolas10 = tkFont.Font(family='Consolas', size=10)
 consolas10B = tkFont.Font(family='Consolas', size=10, weight = 'bold')
 consolas09 = tkFont.Font(family='Consolas', size=9)
@@ -406,8 +411,11 @@ currentProgressDisplay.grid(column = 1, row = 3, padx=5, pady=5, sticky = W)
 
 
 # ctrlFrame Widgets
-startDownload = Button(ctrlFrame, width = 13, text = "Start Download", font = consolas12, fg = "#FDFEFE", bg = "#27AE60", command=lambda:start_submit_thread(None))
-startDownload.grid(column = 1, row = 1, padx=5, pady=5, ipadx=15, ipady= 2, sticky = NW)
+startDownload = Button(ctrlFrame, width = 25, text = "Start Download", font = consolas12, fg = "#FDFEFE", bg = "#27AE60", command=lambda:start_submit_thread(None))
+startDownload.grid(column = 1, row = 1, padx=0, pady=5, ipadx=15, ipady= 2, sticky = EW)
+
+resetProgram = Button(ctrlFrame, width = 5, text = "Reset", font = consolas12, fg = "#FDFEFE", bg = "#AE2732", command=clickReset)
+resetProgram.grid(column = 2, row = 1, padx=5, pady=5, ipadx=15, ipady= 2, sticky = EW)
 
 copyrightNotice = Label(ctrlFrame, text = "Created by ZH for Portable Spectral Services", anchor = W, font = consolas08, fg = "#b5b5b5")
 copyrightNotice.grid(column = 1, row = 2, padx=5, pady=0, sticky = SW)
